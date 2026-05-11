@@ -1,212 +1,206 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Cool Boy Sign-Up</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(135deg, #1e3c72, #2a5298);
-      color: #fff;
-      margin: 0;
-      padding: 20px;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lil-Chat Clone</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #222;
+    color: #fff;
+    margin: 0;
+    padding: 0;
+  }
 
-    h1 {
-      text-align: center;
-      font-family: 'Comic Sans MS', cursive, sans-serif;
-      font-size: 3em;
-      margin-bottom: 20px;
-      color: #ffd700;
-      text-shadow: 2px 2px 4px #000;
-    }
+  h1 {
+    background: #444;
+    margin: 0;
+    padding: 10px;
+    text-align: center;
+  }
 
-    #auth {
-      max-width: 600px;
-      margin: 0 auto;
-      background: rgba(0, 0, 0, 0.3);
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-    }
+  #auth, #chat {
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 10px;
+    background: #333;
+    border-radius: 8px;
+  }
 
-    input {
-      width: calc(50% - 20px);
-      padding: 10px;
-      margin: 10px 10px 20px 0;
-      border-radius: 8px;
-      border: none;
-      font-size: 1em;
-    }
+  input {
+    width: calc(50% - 10px);
+    padding: 8px;
+    margin: 5px 10px;
+    border-radius: 4px;
+    border: none;
+  }
 
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      background-color: #ffd700;
-      color: #222;
-      font-size: 1em;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
+  button {
+    padding: 8px 12px;
+    margin: 5px;
+    border: none;
+    border-radius: 4px;
+    background: #ffd700;
+    cursor: pointer;
+  }
 
-    button:hover {
-      background-color: #e6c200;
-    }
+  #friends {
+    margin-top: 10px;
+  }
 
-    #messages {
-      height: 300px;
-      overflow-y: auto;
-      background: rgba(255, 255, 255, 0.1);
-      padding: 10px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-    }
+  #friends div {
+    background: #555;
+    margin: 5px 0;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
 
-    #messages p {
-      margin: 5px 0;
-    }
+  #messages {
+    height: 300px;
+    overflow-y: auto;
+    background: #111;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 4px;
+  }
 
-    #friendsList {
-      list-style: none;
-      padding: 0;
-    }
-
-    #friendsList li {
-      background: rgba(255, 255, 255, 0.2);
-      margin: 5px 0;
-      padding: 8px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    #friendsList li:hover {
-      background: rgba(255, 255, 255, 0.4);
-    }
-
-    /* Add some glow effect for the title */
-    h1 {
-      text-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700;
-    }
-  </style>
+  #messages p {
+    margin: 5px 0;
+  }
+</style>
 </head>
 <body>
-  <h1>Cool Boy Sign-Up</h1>
-  
-  <div id="auth">
-    <h2>Register</h2>
-    <input id="regUsername" placeholder="Username" />
-    <input id="regPassword" type="password" placeholder="Password" />
-    <button onclick="register()">Register & Login</button>
+
+<h1>Lil-Chat Clone</h1>
+
+<div id="auth">
+  <h3>Register</h3>
+  <input id="regUsername" placeholder="Username" />
+  <input id="regPassword" placeholder="Password" type="password"/>
+  <button onclick="register()">Register & Login</button>
+</div>
+
+<div id="chat" style="display:none;">
+  <h3>Welcome, <span id="userDisplay"></span></h3>
+  <div>
+    <h4>Add Friend</h4>
+    <input id="friendUsername" placeholder="Friend's username" />
+    <button onclick="addFriend()">Add</button>
   </div>
-
-  <div id="app" style="display:none;">
-    <h2>Add Friend</h2>
-    <input id="friendUsername" placeholder="Friend's Username" />
-    <button onclick="addFriend()">Add Friend</button>
-
-    <h2>Friends List</h2>
-    <ul id="friendsList"></ul>
-
-    <h2>Chat</h2>
+  <div id="friends">
+    <h4>Your Friends</h4>
+    <!-- Friends will appear here -->
+  </div>
+  <div>
+    <h4>Chat with: <span id="chatWith"></span></h4>
     <div id="messages"></div>
-    <input id="messageInput" placeholder="Message" />
+    <input id="messageInput" placeholder="Type a message" />
     <button onclick="sendMessage()">Send</button>
   </div>
+</div>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    let token = '';
-    let socket;
-    let chatWithId = null;
+<!-- Include socket.io client -->
+<script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+<script>
+  let socket;
+  let token = '';
+  let username = '';
+  let currentChatFriendId = '';
 
-    async function register() {
-      const username = document.getElementById('regUsername').value;
-      const password = document.getElementById('regPassword').value;
+  async function register() {
+    const usernameInput = document.getElementById('regUsername').value;
+    const passwordInput = document.getElementById('regPassword').value;
 
-      const res = await fetch('/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
+    const res = await fetch('YOUR_BACKEND_URL_HERE/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: usernameInput, password: passwordInput }),
+    });
 
-      if (res.ok) {
-        alert('Registered! Logging you in...');
-        // Automatically log in after registration
-        await loginWithCredentials(username, password);
-      } else {
-        const error = await res.json();
-        alert('Registration failed: ' + error.message);
-      }
+    if (res.ok) {
+      alert('Registered! Logging in...');
+      await login(usernameInput, passwordInput);
+    } else {
+      alert('Registration failed.');
     }
+  }
 
-    async function loginWithCredentials(username, password) {
-      const res = await fetch('/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        token = data.token;
-        document.getElementById('auth').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
+  async function login(usernameInput, passwordInput) {
+    const res = await fetch('YOUR_BACKEND_URL_HERE/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: usernameInput, password: passwordInput }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      token = data.token;
+      username = usernameInput;
+      document.getElementById('auth').style.display = 'none';
+      document.getElementById('chat').style.display = 'block';
+      document.getElementById('userDisplay').innerText = username;
 
-        // Connect socket
-        socket = io();
-        socket.emit('join', { token });
-        socket.on('message', ({ from, message }) => {
-          const messagesDiv = document.getElementById('messages');
-          messagesDiv.innerHTML += `<p><b>${from}:</b> ${message}</p>`;
-        });
-        loadFriends();
-      } else {
-        alert('Login failed: ' + data.message);
-      }
-    }
-
-    async function addFriend() {
-      const friendUsername = document.getElementById('friendUsername').value;
-      await fetch('/add-friend', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
-        body: JSON.stringify({ friendUsername }),
-      });
+      // Connect socket
+      socket = io('YOUR_BACKEND_URL_HERE');
+      socket.emit('join', { token });
+      socket.on('message', handleIncomingMessage);
       loadFriends();
+    } else {
+      alert('Login failed.');
     }
+  }
 
-    async function loadFriends() {
-      const res = await fetch('/friends', {
-        headers: { 'Authorization': token },
-      });
-      const data = await res.json();
-      const list = document.getElementById('friendsList');
-      list.innerHTML = '';
-      data.friends.forEach(friend => {
-        const li = document.createElement('li');
-        li.textContent = friend.username;
-        li.onclick = () => {
-          chatWithId = friend._id;
-          alert(`Chatting with ${friend.username}`);
-        };
-        list.appendChild(li);
-      });
-    }
+  async function addFriend() {
+    const friendUsername = document.getElementById('friendUsername').value;
+    await fetch('YOUR_BACKEND_URL_HERE/api/add-friend', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify({ friendUsername }),
+    });
+    loadFriends();
+  }
 
-    async function sendMessage() {
-      const message = document.getElementById('messageInput').value;
-      if (chatWithId) {
-        socket.emit('message', { to: chatWithId, message });
-        const messagesDiv = document.getElementById('messages');
-        messagesDiv.innerHTML += `<p><b>You:</b> ${message}</p>`;
-        document.getElementById('messageInput').value = '';
-      } else {
-        alert('Select a friend to chat with by clicking their name.');
-      }
+  async function loadFriends() {
+    const res = await fetch('YOUR_BACKEND_URL_HERE/api/friends', {
+      headers: { 'Authorization': 'Bearer ' + token },
+    });
+    const data = await res.json();
+    const friendsDiv = document.getElementById('friends');
+    friendsDiv.innerHTML = '';
+    data.friends.forEach(friend => {
+      const div = document.createElement('div');
+      div.innerText = friend.username;
+      div.onclick = () => {
+        document.getElementById('chatWith').innerText = friend.username;
+        currentChatFriendId = friend._id;
+        document.getElementById('messages').innerHTML = '';
+      };
+      friendsDiv.appendChild(div);
+    });
+  }
+
+  async function sendMessage() {
+    const message = document.getElementById('messageInput').value;
+    if (!currentChatFriendId) {
+      alert('Select a friend to chat with.');
+      return;
     }
-  </script>
+    socket.emit('message', {
+      to: currentChatFriendId,
+      message: message,
+    });
+    document.getElementById('messages').innerHTML += `<p><b>You:</b> ${message}</p>`;
+    document.getElementById('messageInput').value = '';
+  }
+
+  function handleIncomingMessage(data) {
+    const messagesDiv = document.getElementById('messages');
+    messagesDiv.innerHTML += `<p><b>${data.from}:</b> ${data.message}</p>`;
+  }
+</script>
 </body>
 </html>
