@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Cool Boy Chat</title>
+  <title>Cool Boy Sign-Up</title>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -20,7 +20,7 @@
       text-shadow: 2px 2px 4px #000;
     }
 
-    #auth, #app {
+    #auth {
       max-width: 600px;
       margin: 0 auto;
       background: rgba(0, 0, 0, 0.3);
@@ -91,17 +91,13 @@
   </style>
 </head>
 <body>
-  <h1>Cool Boy Chat</h1>
+  <h1>Cool Boy Sign-Up</h1>
   
   <div id="auth">
     <h2>Register</h2>
     <input id="regUsername" placeholder="Username" />
     <input id="regPassword" type="password" placeholder="Password" />
-    <button onclick="register()">Register</button>
-    <h2>Login</h2>
-    <input id="loginUsername" placeholder="Username" />
-    <input id="loginPassword" type="password" placeholder="Password" />
-    <button onclick="login()">Login</button>
+    <button onclick="register()">Register & Login</button>
   </div>
 
   <div id="app" style="display:none;">
@@ -127,35 +123,46 @@
     async function register() {
       const username = document.getElementById('regUsername').value;
       const password = document.getElementById('regPassword').value;
-      await fetch('/register', {
+
+      const res = await fetch('/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-      alert('Registered! You can now login.');
+
+      if (res.ok) {
+        alert('Registered! Logging you in...');
+        // Automatically log in after registration
+        await loginWithCredentials(username, password);
+      } else {
+        const error = await res.json();
+        alert('Registration failed: ' + error.message);
+      }
     }
 
-    async function login() {
-      const username = document.getElementById('loginUsername').value;
-      const password = document.getElementById('loginPassword').value;
+    async function loginWithCredentials(username, password) {
       const res = await fetch('/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
-      token = data.token;
-      document.getElementById('auth').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
+      if (res.ok) {
+        token = data.token;
+        document.getElementById('auth').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
 
-      // Connect socket
-      socket = io();
-      socket.emit('join', { token });
-      socket.on('message', ({ from, message }) => {
-        const messagesDiv = document.getElementById('messages');
-        messagesDiv.innerHTML += `<p><b>${from}:</b> ${message}</p>`;
-      });
-      loadFriends();
+        // Connect socket
+        socket = io();
+        socket.emit('join', { token });
+        socket.on('message', ({ from, message }) => {
+          const messagesDiv = document.getElementById('messages');
+          messagesDiv.innerHTML += `<p><b>${from}:</b> ${message}</p>`;
+        });
+        loadFriends();
+      } else {
+        alert('Login failed: ' + data.message);
+      }
     }
 
     async function addFriend() {
