@@ -1,17 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Nick & Canadian Man Chat</title>
+
   <style>
-    body { font-family: Arial; background:#f0f0f0; margin:0; padding:20px; }
-    #chat { height:60vh; overflow-y:scroll; background:white; padding:10px; border-radius:8px; }
-    #input-area { margin-top:20px; display:flex; gap:10px; }
-    input, button { padding:10px; font-size:16px; }
-    button { background:#007bff; color:white; border:none; border-radius:5px; }
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background: #0a0f1f;
+      color: #00aaff;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 32px;
+      text-shadow: 0 0 10px #00aaff;
+    }
+
+    #chat {
+      height: 60vh;
+      overflow-y: scroll;
+      background: #11182d;
+      padding: 15px;
+      border-radius: 12px;
+      border: 2px solid #00aaff;
+      box-shadow: 0 0 20px #005577;
+    }
+
+    #chat div {
+      background: #0d1326;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-left: 4px solid #00aaff;
+      border-radius: 6px;
+      color: #cceeff;
+    }
+
+    #input-area {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    input {
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 2px solid #00aaff;
+      background: #0d1326;
+      color: #cceeff;
+      flex: 1;
+    }
+
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      background: #00aaff;
+      color: #00111f;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 0 10px #00aaff;
+    }
+
+    button:hover {
+      background: #0088cc;
+      box-shadow: 0 0 15px #0088cc;
+    }
   </style>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 </head>
@@ -24,14 +87,14 @@
 <div id="input-area">
   <input id="name" placeholder="Your name">
   <input id="message" placeholder="Type a message...">
-  <button onclick="sendMessage()">Send</button>
+  <button id="send">Send</button>
 </div>
 
 <script>
-  // 🔥 Replace with your Firebase config (from Firebase Console)
+  // 🔥 REPLACE THIS WITH YOUR FIREBASE CONFIG
   const firebaseConfig = {
-    apiKey: "YOUR_KEY",
-    authDomain: "YOUR_DOMAIN",
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
     projectId: "YOUR_PROJECT_ID",
   };
 
@@ -39,8 +102,8 @@
   const db = firebase.firestore();
 
   const chatBox = document.getElementById("chat");
+  const sendBtn = document.getElementById("send");
 
-  // Load messages in real time
   db.collection("messages")
     .orderBy("timestamp")
     .onSnapshot(snapshot => {
@@ -54,8 +117,7 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     });
 
-  // Send message
-  function sendMessage() {
+  sendBtn.onclick = () => {
     const name = document.getElementById("name").value.trim();
     const text = document.getElementById("message").value.trim();
     if (!name || !text) return;
@@ -67,7 +129,7 @@
     });
 
     document.getElementById("message").value = "";
-  }
+  };
 </script>
 
 </body>
