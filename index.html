@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Nick & Canadian Man Chat</title>
+  <title>Chat</title>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
@@ -31,7 +31,10 @@
       box-shadow: 0 0 20px #005577;
     }
 
-    #chat div {
+    .msg {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       background: #0d1326;
       padding: 10px;
       margin-bottom: 10px;
@@ -40,13 +43,21 @@
       color: #cceeff;
     }
 
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #00aaff;
+    }
+
     #input-area {
       margin-top: 20px;
       display: flex;
       gap: 10px;
+      flex-wrap: wrap;
     }
 
-    input {
+    input, select {
       padding: 12px;
       font-size: 16px;
       border-radius: 6px;
@@ -86,12 +97,20 @@
 </head>
 <body>
 
-<h2>Nick & Canadian Man Chat</h2>
+<h2>Chat</h2>
 
 <div id="chat"></div>
 
 <div id="input-area">
   <input id="name" placeholder="Your name (required)">
+  
+  <select id="avatar">
+    <option value="https://i.imgur.com/1XKQFQp.png">Blue Bot</option>
+    <option value="https://i.imgur.com/8QfQ2Qx.png">Red Bot</option>
+    <option value="https://i.imgur.com/4zQZQ0Z.png">Green Bot</option>
+    <option value="https://i.imgur.com/7YkqZyN.png">Skull</option>
+  </select>
+
   <input id="message" placeholder="Type a message...">
   <button id="send">Send</button>
 </div>
@@ -111,6 +130,7 @@
   const sendBtn = document.getElementById("send");
   const nameInput = document.getElementById("name");
   const msgInput = document.getElementById("message");
+  const avatarInput = document.getElementById("avatar");
 
   // Real-time listener
   db.collection("messages")
@@ -119,8 +139,19 @@
       chatBox.innerHTML = "";
       snapshot.forEach(doc => {
         const msg = doc.data();
+
         const div = document.createElement("div");
-        div.textContent = msg.name + ": " + msg.text;
+        div.className = "msg";
+
+        const img = document.createElement("img");
+        img.src = msg.avatar;
+        img.className = "avatar";
+
+        const text = document.createElement("span");
+        text.textContent = msg.name + ": " + msg.text;
+
+        div.appendChild(img);
+        div.appendChild(text);
         chatBox.appendChild(div);
       });
       chatBox.scrollTop = chatBox.scrollHeight;
@@ -130,8 +161,8 @@
   sendBtn.onclick = () => {
     const name = nameInput.value.trim();
     const text = msgInput.value.trim();
+    const avatar = avatarInput.value;
 
-    // 🔒 REQUIRE NAME
     if (!name) {
       nameInput.classList.add("error");
       return;
@@ -144,6 +175,7 @@
     db.collection("messages").add({
       name,
       text,
+      avatar,
       timestamp: Date.now()
     });
 
