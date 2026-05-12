@@ -1,211 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Cool Chat</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #222;
-    color: #fff;
-    margin: 0;
-    padding: 0;
-  }
-
-  h1 {
-    background: #444;
-    margin: 0;
-    padding: 10px;
-    text-align: center;
-    font-family: 'Comic Sans MS', cursive, sans-serif;
-    font-size: 3em;
-    margin-bottom: 20px;
-    color: #ffd700;
-    text-shadow: 2px 2px 4px #000;
-  }
-
-  #auth, #chat {
-    max-width: 400px;
-    margin: 20px auto;
-    padding: 10px;
-    background: #333;
-    border-radius: 8px;
-  }
-
-  input {
-    width: calc(50% - 10px);
-    padding: 8px;
-    margin: 5px 10px;
-    border-radius: 4px;
-    border: none;
-  }
-
-  button {
-    padding: 8px 12px;
-    margin: 5px;
-    border: none;
-    border-radius: 4px;
-    background: #ffd700;
-    cursor: pointer;
-  }
-
-  #friends {
-    margin-top: 10px;
-  }
-
-  #friends div {
-    background: #555;
-    margin: 5px 0;
-    padding: 8px;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  #messages {
-    height: 300px;
-    overflow-y: auto;
-    background: #111;
-    padding: 10px;
-    margin-top: 10px;
-    border-radius: 4px;
-  }
-
-  #messages p {
-    margin: 5px 0;
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>Nick & Canadian Man Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      margin: 0;
+      padding: 0;
+    }
+    #chat-box {
+      width: 90%;
+      height: 70vh;
+      margin: 20px auto;
+      padding: 10px;
+      background: white;
+      border-radius: 10px;
+      overflow-y: scroll;
+      border: 2px solid #ccc;
+    }
+    #input-area {
+      width: 90%;
+      margin: 0 auto;
+      display: flex;
+      gap: 10px;
+    }
+    #name {
+      width: 20%;
+      padding: 10px;
+      font-size: 16px;
+    }
+    #message {
+      width: 60%;
+      padding: 10px;
+      font-size: 16px;
+    }
+    #send {
+      width: 20%;
+      padding: 10px;
+      font-size: 16px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #send:hover {
+      background: #0056b3;
+    }
+  </style>
 </head>
 <body>
 
-<h1>Cool Chat</h1>
+  <h2 style="text-align:center;">Nick & Canadian Man Chat</h2>
 
-<div id="auth">
-  <h3>Register</h3>
-  <input id="regUsername" placeholder="Username" />
-  <input id="regPassword" placeholder="Password" type="password"/>
-  <button onclick="register()">Register & Login</button>
-</div>
+  <div id="chat-box"></div>
 
-<div id="chat" style="display:none;">
-  <h3>Welcome, <span id="userDisplay"></span></h3>
-  <div>
-    <h4>Add Friend</h4>
-    <input id="friendUsername" placeholder="Friend's username" />
-    <button onclick="addFriend()">Add</button>
+  <div id="input-area">
+    <input id="name" placeholder="Your name (Nick or Canadian Man)">
+    <input id="message" placeholder="Type a message...">
+    <button id="send">Send</button>
   </div>
-  <div id="friends">
-    <h4>Your Friends</h4>
-    <!-- Friends will appear here -->
-  </div>
-  <div>
-    <h4>Chat with: <span id="chatWith"></span></h4>
-    <div id="messages"></div>
-    <input id="messageInput" placeholder="Type a message" />
-    <button onclick="sendMessage()">Send</button>
-  </div>
-</div>
 
-<!-- Include socket.io client -->
-<script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
-<script>
-  let socket;
-  let token = '';
-  let username = '';
-  let currentChatFriendId = '';
+  <script>
+    const chatBox = document.getElementById("chat-box");
+    const nameInput = document.getElementById("name");
+    const messageInput = document.getElementById("message");
+    const sendBtn = document.getElementById("send");
 
-  async function register() {
-    const usernameInput = document.getElementById('regUsername').value;
-    const passwordInput = document.getElementById('regPassword').value;
-
-    const res = await fetch('YOUR_BACKEND_URL_HERE/api/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: usernameInput, password: passwordInput }),
-    });
-
-    if (res.ok) {
-      alert('Registered! Logging in...');
-      await login(usernameInput, passwordInput);
-    } else {
-      alert('Registration failed.');
+    function loadMessages() {
+      const messages = JSON.parse(localStorage.getItem("chat")) || [];
+      chatBox.innerHTML = "";
+      messages.forEach(msg => {
+        const div = document.createElement("div");
+        div.textContent = msg.name + ": " + msg.text;
+        chatBox.appendChild(div);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
-  }
 
-  async function login(usernameInput, passwordInput) {
-    const res = await fetch('YOUR_BACKEND_URL_HERE/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: usernameInput, password: passwordInput }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      token = data.token;
-      username = usernameInput;
-      document.getElementById('auth').style.display = 'none';
-      document.getElementById('chat').style.display = 'block';
-      document.getElementById('userDisplay').innerText = username;
+    function sendMessage() {
+      const name = nameInput.value.trim();
+      const text = messageInput.value.trim();
+      if (!name || !text) return;
 
-      // Connect socket
-      socket = io('YOUR_BACKEND_URL_HERE');
-      socket.emit('join', { token });
-      socket.on('message', handleIncomingMessage);
-      loadFriends();
-    } else {
-      alert('Login failed.');
+      const messages = JSON.parse(localStorage.getItem("chat")) || [];
+      messages.push({ name, text });
+      localStorage.setItem("chat", JSON.stringify(messages));
+
+      messageInput.value = "";
+      loadMessages();
     }
-  }
 
-  async function addFriend() {
-    const friendUsername = document.getElementById('friendUsername').value;
-    await fetch('YOUR_BACKEND_URL_HERE/api/add-friend', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token,
-      },
-      body: JSON.stringify({ friendUsername }),
+    sendBtn.addEventListener("click", sendMessage);
+    messageInput.addEventListener("keypress", e => {
+      if (e.key === "Enter") sendMessage();
     });
-    loadFriends();
-  }
 
-  async function loadFriends() {
-    const res = await fetch('YOUR_BACKEND_URL_HERE/api/friends', {
-      headers: { 'Authorization': 'Bearer ' + token },
-    });
-    const data = await res.json();
-    const friendsDiv = document.getElementById('friends');
-    friendsDiv.innerHTML = '';
-    data.friends.forEach(friend => {
-      const div = document.createElement('div');
-      div.innerText = friend.username;
-      div.onclick = () => {
-        document.getElementById('chatWith').innerText = friend.username;
-        currentChatFriendId = friend._id;
-        document.getElementById('messages').innerHTML = '';
-      };
-      friendsDiv.appendChild(div);
-    });
-  }
+    loadMessages();
+  </script>
 
-  async function sendMessage() {
-    const message = document.getElementById('messageInput').value;
-    if (!currentChatFriendId) {
-      alert('Select a friend to chat with.');
-      return;
-    }
-    socket.emit('message', {
-      to: currentChatFriendId,
-      message: message,
-    });
-    document.getElementById('messages').innerHTML += `<p><b>You:</b> ${message}</p>`;
-    document.getElementById('messageInput').value = '';
-  }
-
-  function handleIncomingMessage(data) {
-    const messagesDiv = document.getElementById('messages');
-    messagesDiv.innerHTML += `<p><b>${data.from}:</b> ${data.message}</p>`;
-  }
-</script>
 </body>
 </html>
