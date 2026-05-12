@@ -54,6 +54,12 @@
       background: #0d1326;
       color: #cceeff;
       flex: 1;
+      outline: none;
+    }
+
+    input.error {
+      border-color: #ff4444;
+      box-shadow: 0 0 10px #ff4444;
     }
 
     button {
@@ -85,13 +91,13 @@
 <div id="chat"></div>
 
 <div id="input-area">
-  <input id="name" placeholder="Your name">
+  <input id="name" placeholder="Your name (required)">
   <input id="message" placeholder="Type a message...">
   <button id="send">Send</button>
 </div>
 
 <script>
-  // 🔥 REPLACE THIS WITH YOUR FIREBASE CONFIG
+  // 🔥 REPLACE WITH YOUR FIREBASE CONFIG
   const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -103,7 +109,10 @@
 
   const chatBox = document.getElementById("chat");
   const sendBtn = document.getElementById("send");
+  const nameInput = document.getElementById("name");
+  const msgInput = document.getElementById("message");
 
+  // Real-time listener
   db.collection("messages")
     .orderBy("timestamp")
     .onSnapshot(snapshot => {
@@ -117,10 +126,20 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     });
 
+  // Send message
   sendBtn.onclick = () => {
-    const name = document.getElementById("name").value.trim();
-    const text = document.getElementById("message").value.trim();
-    if (!name || !text) return;
+    const name = nameInput.value.trim();
+    const text = msgInput.value.trim();
+
+    // 🔒 REQUIRE NAME
+    if (!name) {
+      nameInput.classList.add("error");
+      return;
+    } else {
+      nameInput.classList.remove("error");
+    }
+
+    if (!text) return;
 
     db.collection("messages").add({
       name,
@@ -128,7 +147,7 @@
       timestamp: Date.now()
     });
 
-    document.getElementById("message").value = "";
+    msgInput.value = "";
   };
 </script>
 
